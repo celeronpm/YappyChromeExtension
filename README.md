@@ -1,4 +1,4 @@
-# YappyChromeExtension
+# Yappy Chrome Extension
 Chrome extension for Yappy.im
 
 This extension is available live at: https://chrome.google.com/webstore/detail/yappy/jleajjoinbmogfgencngmnnndkkciben
