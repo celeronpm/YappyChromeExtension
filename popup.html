@@ -33,11 +33,11 @@
         <div class="container">
             <p>
                 <h6 id="labelTimeout" style="display: inline; color:#a9a9a9">Send From:</h6>
-                &nbsp;
-                        <select style="display: inline" id="deviceList">
-                        </select>					
-					
+                &nbsp; <select style="display: inline" id="deviceList"></select>					
+				<br/>
 			<h6 id="labelTimeout" style="display: inline; color:#a9a9a9" title="Unread messages on selected phone">Unread Messages:</h6>  <span target="_blank" id="UnreadMessages" title="# of Unread Messages"></span>
+			<br/>
+			<h6 id="labelTimeout" style="display: inline; color:#a9a9a9" title="Battery Level">Battery Level:</h6>  <span target="_blank" id="BatteryLevel" title="Battery Level"></span>
             </p>
             <p><input placeholder="Phone#" id='txtPhone' class="ui-autocomplete-input"></p>
             <p style="border-bottom:1px solid #bdbdbd"><textarea placeholder="Message" style="width: 100%; height: 80px; border: none" id='txtMessage'></textarea></p>
@@ -48,29 +48,33 @@
         <div class="container">
             <div class="section">
                 <form action="#">
+					<p>
+                        <input type="checkbox" id="chkHideAndroid" />
+                        <label for="chkHideAndroid">Hide all Android notifications</label>
+                    </p>
                     <p>
                         <input type="checkbox" id="chkHideNotification" />
-                        <label for="chkHideNotification">Hide all notifications</label>
+                        <label for="chkHideNotification">Hide all SMS notifications</label>
                     </p>
                     <p>
                         <input type="checkbox" id="chkHidePhone" />
-                        <label for="chkHidePhone">Hide sender phone # in notification</label>
+                        <label for="chkHidePhone">Hide sender phone # in SMS notification</label>
                     </p>
                     <p>
                         <input type="checkbox" id="chkHideName" />
-                        <label for="chkHideName">Hide sender name in notification</label>
+                        <label for="chkHideName">Hide sender name in SMS notification</label>
                     </p>
                     <p>
                         <input type="checkbox" id="chkHidePhoto" />
-                        <label for="chkHidePhoto">Hide sender avatar in notification</label>
+                        <label for="chkHidePhoto">Hide sender avatar in SMS notification</label>
                     </p>
                     <p>
                         <input type="checkbox" id="chkHideMessage" />
-                        <label for="chkHideMessage">Hide text message in notification</label>
+                        <label for="chkHideMessage">Hide text message in SMS notification</label>
                     </p>
                     <p>
                         <input type="checkbox" id="chkHideImages" />
-                        <label for="chkHideImages">Hide MMS images in notification</label>
+                        <label for="chkHideImages">Hide MMS images in MMS notification</label>
                     </p>
                     <p>
                         <h6 id="labelTimeout" style="display: inline;">Notification Timeout:</h6>

@@ -35,6 +35,67 @@ function getSendToList() {
     return finalList;
 }
 
+var formatHelpers = {
+    month: new Array("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
+    timeToString: function (time, showTimeIfDateNotSame, showYear) {
+        if (time == null) {
+            return null;
+        }
+
+        var messageDate = new Date(0); // The 0 there is the key, which sets the date to the epoch
+        messageDate.setUTCMilliseconds(time);
+        
+        var minutes = messageDate.getMinutes();
+        if (minutes < 10) {
+            minutes = "0" + minutes;
+        }
+
+        if (formatHelpers.isDameDay(messageDate, new Date)) {
+            try {
+                var t = messageDate.toLocaleTimeString(model.selectedDevice().selectedLocale());
+                t = t.replace(/\u200E/g, '');
+                t = t.replace(/^([^\d]*\d{1,2}:\d{1,2}):\d{1,2}([^\d]*)$/, '$1$2');
+                return t + (showYear == true ? (" " + messageDate.getFullYear()) : "");
+            }
+            catch(e){}
+            return (messageDate.getHours() > 12 ? messageDate.getHours() - 12 : messageDate.getHours() == 0 ? 12 : messageDate.getHours()) + ":" + minutes + " " + (messageDate.getHours() > 12 ? "PM" : "AM") + (showYear == true ? (" " + messageDate.getFullYear()) : "");
+        } else {
+            if (showTimeIfDateNotSame == true) {
+                try {
+                    var t = messageDate.toLocaleTimeString(model.selectedDevice().selectedLocale());
+                    t = t.replace(/\u200E/g, '');
+                    t = t.replace(/^([^\d]*\d{1,2}:\d{1,2}):\d{1,2}([^\d]*)$/, '$1$2');
+
+                    return this.month[messageDate.getMonth()] + " " + messageDate.getDate() + " " + t + (showYear == true ? (" " + messageDate.getFullYear()) : "");
+                }
+                catch (e) { }
+                return this.month[messageDate.getMonth()] + " " + messageDate.getDate() + " " + (messageDate.getHours() > 12 ? messageDate.getHours() - 12 : messageDate.getHours() == 0 ? 12 : messageDate.getHours()) + ":" + minutes + " " + (messageDate.getHours() > 12 ? "PM" : "AM") + (showYear == true ? (" " + messageDate.getFullYear()) : "");
+            }
+            return this.month[messageDate.getMonth()] + " " + messageDate.getDate() + (showYear == true ? (" " + messageDate.getFullYear()) : "");
+        }
+    },
+    formatNumber: function(x) {
+        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    },
+    isDameDay: function (d1, d2) {
+        return d1.getFullYear() == d2.getFullYear() &&
+            d1.getMonth() == d2.getMonth() &&
+            d1.getDate() == d2.getDate();
+    },
+    formatSeconds: function (totalSeconds) {
+        var hours = Math.floor(totalSeconds / 3600);
+        totalSeconds %= 3600;
+        var minutes = Math.floor(totalSeconds / 60);
+        var seconds = totalSeconds % 60;
+
+        if (totalSeconds == 0) {
+            return "indeterminate";
+        }
+
+        return (hours > 0 ? hours + " hours, " : "") + (minutes > 0 ? minutes + " minutes, " : "") +( seconds +" seconds");
+    }
+};
+
 $(document).ready(function() {
 
     $('ul.tabs').tabs();
@@ -62,7 +123,6 @@ $(document).ready(function() {
         });
 
 
-
 	function refreshUnread()
 	{
 		$.post(apiHost + '/chrome/GetCountUnread', {
@@ -72,11 +132,18 @@ $(document).ready(function() {
 
 				$("#UnreadMessages").text(data)
 			});
+			
+			$.post(apiHost + '/chrome/GetBattery', {
+				'DeviceID': $('#deviceList option:selected').val()
+			},
+			function(data) {
+				$("#BatteryLevel").text(data.Percent+"% (" + (data.IsCharging ? "charging" : "discharging") +") - " + formatHelpers.timeToString(data.Time))
+			});
 	}
 
     $("#chkHideNotification").change(function(e) {
         var checked = $(this).is(":checked");
-
+	
         chrome.storage.local.set({
             'HideNotification': checked
         });
@@ -90,6 +157,14 @@ $(document).ready(function() {
         $("#timeoutDD").css("display", checked ? 'none' : 'block');
 
     });
+
+	$("#chkHideAndroid").change(function(e) {
+        var checked = $(this).is(":checked");
+        chrome.storage.local.set({
+            'HideAndroid': checked
+        });
+    });
+	
 
     $("#chkHideImages").change(function(e) {
         var checked = $(this).is(":checked");
@@ -132,7 +207,7 @@ $(document).ready(function() {
         });
     });
 
-    var keys = ["HideNotification", "HidePhone", "HideName", "HidePhoto", "HideMessage", "HideImage", "Timeout"];
+    var keys = ["HideNotification", "HidePhone", "HideName", "HidePhoto", "HideMessage", "HideImage", "Timeout", "HideAndroid"];
     chrome.storage.local.get(keys, function(result) {
 
         if (result["HidePhone"] == true) {
@@ -162,6 +237,10 @@ $(document).ready(function() {
 
         if (result["HideNotification"] == true) {
             $("#chkHideNotification").click();
+        };
+		
+		   if (result["HideAndroid"] == true) {
+            $("#chkHideAndroid").click();
         };
 
     });

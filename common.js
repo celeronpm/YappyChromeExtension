@@ -1,4 +1,4 @@
-function openEJWindow(newWindow, subUrl)
+function openEJWindow(newWindow, subUrl, URL)
 {
     var newURL = "https://www.yappy.im/web/";
     var isOpen = false;
@@ -6,6 +6,12 @@ function openEJWindow(newWindow, subUrl)
 	{
 		subUrl = "";
 	}
+	
+	if (URL!= null)
+	{
+		newURL = URL;
+	}
+	
 
     // get the current window
     chrome.windows.getAll({

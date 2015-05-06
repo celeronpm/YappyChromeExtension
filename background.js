@@ -19,7 +19,7 @@ $(document).ready(function() {
     startup();
 
 });
-
+	
 function startup() {
 
     if (isLoggingIn == true) {
@@ -71,6 +71,7 @@ function startup() {
         });
 }
 
+var notifications = new Array();
 
 function connect() {
     var chatHub = $.connection.chatHub;
@@ -96,7 +97,8 @@ function connect() {
             if (result["HideName"] != true) {
                 myTitle += message.Name;
             };
-            if (result["HidePhone"] != true && message.Phone != null && message.Phone != "") {
+            
+			if (result["HidePhone"] != true && message.Phone != null && message.Phone != "") {
                 if (myTitle != "") {
                     myTitle += " - ";
                 }
@@ -175,7 +177,89 @@ function connect() {
         });
     };
 
+	chatHub.client.addAndroidNotification = function(notification)
+	{
+	   var keys = [ "HideAndroid", "Timeout"];
+        chrome.storage.local.get(keys, function(result) {
 
+		   if (result["HideAndroid"] == true) {
+				return;
+		   }
+
+		   var index = notifications.indexOf(notification.Key);
+		   if (index > -1) {
+		     
+			 destroyNotification(notification.Key);
+			 notifications.splice(notifications.indexOf(notification.Key), 1);
+		   }
+		   
+		    var timerTimout = 5000;
+            if (result["Timeout"] != null) {
+                timerTimout = result["Timeout"];
+            };
+		   
+		    var listeners = {
+                onButtonClicked: function(btnIdx) {
+                   if (btnIdx == 0) {                       
+					    $.post(apiHost + '/chrome/NotificationDismiss', {
+                        'Key': notification.Key,
+						'DeviceID': notification.DeviceID
+                    });				
+					
+					}
+					else if (btnIdx == 1) {                       
+					    $.post(apiHost + '/chrome/NotificationMute', {
+                        'Package': notification.Package,
+						'DeviceID': notification.DeviceID
+                    });					
+					notifications.splice(notifications.indexOf(notification.Key), 1);
+					}			
+                },
+                onClicked: function() {
+				
+				if(notification.URL != null)
+				{
+					openEJWindow(true, null, notification.URL);
+				}
+				
+                    console.log('Clicked: "message-body"');					
+					notifications.splice(notifications.indexOf(notification.Key), 1);
+                },
+                onClosed: function(byUser) {
+                    console.log('Closed: ' + (byUser ? 'by user' : 'automagically (!?)'));
+					notifications.splice(notifications.indexOf(notification.Key), 1);
+                }
+            };
+		
+		    var myNotificationID = null;
+            var options = {
+                type: "basic",
+                title: notification.Title,
+                priority: 2,
+                message: notification.Body,
+			    iconUrl: "/images/icon_80.png",
+                buttons: [{
+                    title: "Dismiss",
+                    iconUrl: "/images/close.png"
+                },
+				{
+                    title: "Mute " + notification.App,
+                    iconUrl: "/images/close.png"
+                }
+				]
+            };			
+			
+			
+			notifications.push(notification.Key);
+			/* Create the notification */
+            createNotification(options, listeners, notification.Key, timerTimout);
+		  });
+	}
+
+	chatHub.client.dismissAndroidNotification = function(messageKey) {
+		console.log("Remove " + messageKey);
+	}
+	
     /* Create a notification and store references
      * of its "re-spawn" timer and event-listeners */
     function createNotification(details, listeners, notifId, timeout) {
