@@ -244,7 +244,7 @@ function connect() {
                 },
 				{
                     title: "Mute " + notification.App,
-                    iconUrl: "/images/close.png"
+                    iconUrl: "/images/mute.png"
                 }
 				]
             };			
