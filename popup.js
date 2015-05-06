@@ -129,7 +129,6 @@ $(document).ready(function() {
 				'DeviceID': $('#deviceList option:selected').val()
 			},
 			function(data) {
-
 				$("#UnreadMessages").text(data)
 			});
 			
@@ -137,7 +136,7 @@ $(document).ready(function() {
 				'DeviceID': $('#deviceList option:selected').val()
 			},
 			function(data) {
-				$("#BatteryLevel").text(data.Percent+"% (" + (data.IsCharging ? "charging" : "discharging") +") - " + formatHelpers.timeToString(data.Time))
+				$("#BatteryLevel").text((data.Percent * 100)+"% (" + (data.IsCharging ? "charging" : "discharging") +") - " + formatHelpers.timeToString(data.Time))
 			});
 	}
 
