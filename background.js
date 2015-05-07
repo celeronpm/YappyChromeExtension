@@ -248,9 +248,9 @@ function connect() {
                 }
 				]
             };			
-			
-			
+
 			notifications.push(notification.Key);
+			
 			/* Create the notification */
             createNotification(options, listeners, notification.Key, timerTimout);
 		  });
@@ -258,6 +258,12 @@ function connect() {
 
 	chatHub.client.dismissAndroidNotification = function(messageKey) {
 		console.log("Remove " + messageKey);
+		destroyNotification(messageKey);
+		
+		if(notifications.indexOf(messageKey) > -1)
+		{
+			notifications.splice(notifications.indexOf(messageKey), 1);
+		}
 	}
 	
     /* Create a notification and store references

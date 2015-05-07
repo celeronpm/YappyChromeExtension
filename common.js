@@ -28,7 +28,13 @@ function openEJWindow(newWindow, subUrl, URL)
                         var myTab = tabs[i];
                         isOpen = true;
                         windowsLeft += 1;
-                        chrome.tabs.update(myTab.id, { highlighted: true, url: (newURL + subUrl)});     
+                        chrome.tabs.update(myTab.id, { highlighted: true});  
+
+						 var c = "var S = document.createElement('script');\
+						S.textContent = \"goToChat('" + subUrl + "');\";\
+						document.head.appendChild(S);"
+					  chrome.tabs.executeScript(myTab.id, {code:c});
+
                         chrome.windows.update(myWindow.id, {                           
                             focused: true,
                             state: myWindow.state == "minimized" ? "normal" : myWindow.state
