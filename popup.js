@@ -136,7 +136,7 @@ $(document).ready(function() {
 				'DeviceID': $('#deviceList option:selected').val()
 			},
 			function(data) {
-				$("#BatteryLevel").text((data.Percent * 100)+"% (" + (data.IsCharging ? "charging" : "discharging") +") - " + formatHelpers.timeToString(data.Time))
+				$("#BatteryLevel").text(Math.round((data.Percent * 100) * 100) / 100 +"% (" + (data.IsCharging ? "charging" : "discharging") +") - " + formatHelpers.timeToString(data.Time))
 			});
 	}
 

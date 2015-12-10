@@ -6,7 +6,6 @@ var isLoggingIn = false;
 var remind = true;
 
 $(document).ready(function() {
-
     SaveLoggedIn(false);
 
     //Check on connection
@@ -32,15 +31,15 @@ function startup() {
     $.get(apiHost + '/Chrome/IsLoggedIn')
         .success(function(data) {
             isLoggingIn == false;
+			
             //We are logged in, conect to Message Bus to recieve notifications
             if (data == true) {
                 SaveLoggedIn(true);
-                connect();
+                connect();				
+				//setupContextMenus();				
             } else {
-
                 if (new Date().getTime() - loginwindowopened > 1000 * 60 * 10 && remind == true) //Open login window every 10 minutes
                 {
-
                     if (confirm('Please login with your Google credentials to use the Yappy extension.\rClick cancel to not be reminded to log in until you restart Chrome.')) {
                         loginwindowopened = new Date().getTime();
 
@@ -73,11 +72,50 @@ function startup() {
 
 var notifications = new Array();
 
+function setupContextMenus() {
+		//chrome.contextMenus.removeAll();
+  
+		//var parent = chrome.contextMenus.create({"title": "Bark via Yappy",  
+		//		"contexts": ["page", "selection", "image", "link"],
+		//		"onclick" : clickHandler}); 
+}
+
+var clickHandler = function(info, tab) {
+	
+	 var bark = { };
+
+        if (info.srcUrl) {
+				bark.type = 'url';
+                bark.title = imageNameFromUrl(info.srcUrl);
+                bark.url = info.srcUrl;
+				
+                Bark(bark, info.srcUrl);
+                return;            
+        } else if (info.linkUrl) {
+            bark.type = 'url';
+            bark.title = info.selectionText;
+            bark.url = info.linkUrl;
+        } else if (info.selectionText) {
+            bark.type = 'text';
+            bark.body = info.selectionText;
+        } else {
+            bark.type = 'url';
+            bark.title = tab.title;
+            bark.url = info.pageUrl;
+        }
+
+        Bark(bark);	
+};
+
 function connect() {
+
     var chatHub = $.connection.chatHub;
     $.connection.hub.url = apiHost + "/signalr";
     var pendingNotifications = {};
-
+	var reconnectTimeout;
+	var echoInterval;
+	var isReconnecting = true;
+	
     chatHub.client.addChromeMessage = function(message) {
 
         var keys = ["HideNotification", "HidePhone", "HideName", "HidePhoto", "HideMessage", "HideImage", "Timeout"];
@@ -177,8 +215,7 @@ function connect() {
         });
     };
 
-	chatHub.client.addAndroidNotification = function(notification)
-	{
+	chatHub.client.addAndroidNotification = function(notification) {
 	   var keys = [ "HideAndroid", "Timeout"];
         chrome.storage.local.get(keys, function(result) {
 
@@ -266,6 +303,10 @@ function connect() {
 		}
 	}
 	
+	chatHub.client.echo = function () {
+        clearTimeout(reconnectTimeout);
+    };
+					
     /* Create a notification and store references
      * of its "re-spawn" timer and event-listeners */
     function createNotification(details, listeners, notifId, timeout) {
@@ -344,14 +385,84 @@ function connect() {
     // Start the connection.
     $.connection.hub.start().done(function() {
         isConnected = true;
+		isReconnecting = false;
         console.log('Connected to server');
     });
 
     $.connection.hub.disconnected(function() {
-        console.log('Disconnected from');
+        console.log('Disconnected from server');
+
         setTimeout(function() {
             console.log('Reconnecting to server');
-            $.connection.hub.start();
+			  isReconnecting = true;
+              $.connection.hub.start();
         }, 5000); // Restart connection after 5 seconds.
     });
+	
+	echoInterval = setInterval(function() {	
+		var reconnectTimeout = setTimeout(		
+			function() {
+				if(isReconnecting || !isConnected)
+				{
+					return;
+				}		
+				
+				isReconnecting = true;
+				console.log('Re-initating connection, havent heard echo');
+				$.connection.hub.stop();	
+				}
+			, 5000);		
+			
+		//Ask server to echo to make sure we are still connected
+		chatHub.server.echo();			
+        }, 1000*60); // Echo every min
 }
+
+
+var fetchImage = function(url, done) {
+    if (url.substring(0, 4) == 'data') {
+        done(base64ToBlob(url.split(',')[1], url.split(';')[0].split(':')[1]));
+    } else {
+        var xhr = new XMLHttpRequest();
+            xhr.open('GET', url);
+            xhr.responseType = 'blob';
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    done(xhr.response);
+                }
+            };
+            xhr.send();
+    }
+};
+
+base64ToBlob = function(base64Data, type) {
+    var sliceSize = 1024;
+    var byteCharacters = atob(base64Data);
+    var bytesLength = byteCharacters.length;
+    var slicesCount = Math.ceil(bytesLength / sliceSize);
+    var byteArrays = new Array(slicesCount);
+
+    for (var sliceIndex = 0; sliceIndex < slicesCount; ++sliceIndex) {
+        var begin = sliceIndex * sliceSize;
+        var end = Math.min(begin + sliceSize, bytesLength);
+
+        var bytes = new Array(end - begin);
+        for (var offset = begin, i = 0 ; offset < end; ++i, ++offset) {
+            bytes[i] = byteCharacters[offset].charCodeAt(0);
+        }
+        byteArrays[sliceIndex] = new Uint8Array(bytes);
+    }
+
+    return new Blob(byteArrays, { type: type });
+};
+
+imageNameFromUrl = function(url) {
+    if (url.substring(0, 4) == 'data') {
+        var type = url.split(';')[0].split(':')[1];
+        var now = new Date();
+        return 'Image_' + now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate()
+               + '-' + now.getHours() + '-' + now.getMinutes() + '-' + now.getSeconds() + '.' + type.split('/')[1];
+    } else {
+        return url.split('/').pop().split('?')[0].split(':')[0];
+    }
+};

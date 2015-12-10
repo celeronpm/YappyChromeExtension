@@ -12,7 +12,6 @@ function openEJWindow(newWindow, subUrl, URL)
 		newURL = URL;
 	}
 	
-
     // get the current window
     chrome.windows.getAll({
         populate: true
