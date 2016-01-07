@@ -382,25 +382,57 @@ function connect() {
         }
     });
 
-    // Start the connection.
-    $.connection.hub.start().done(function() {
-        isConnected = true;
+	var connectionFunction = function () {
+		console.log('Attempting to connect');
+	
+	    // Start the connection.
+		$.connection.hub.start()
+		.done(function() {
+			isConnected = true;
+			isReconnecting = false;
+			console.log('Connected to server');
+		})
+		.fail(function(){ 
+			console.log('Connection failed, will retry');
+			
+			setTimeout(function() {
+				  console.log('Reconnecting to server');
+				  isReconnecting = true;
+				  $.connection.hub.start();
+			}, 2000); // Restart connection after 2 seconds.
+		});
+	};
+	
+	$.connection.hub.reconnecting(function() {
+		console.log('Reconnecting to server');
+		isReconnecting = true;
+	});
+
+	$.connection.hub.reconnected(function() {
+		isConnected = true;
 		isReconnecting = false;
-        console.log('Connected to server');
-    });
+        console.log('Re-connected to server');
+	});
 
     $.connection.hub.disconnected(function() {
         console.log('Disconnected from server');
-
+		 if ($.connection.hub.lastError) 
+		 {   
+			console.log('reason: ' + $.connection.hub.lastError.message);
+		 }
+		 	 
         setTimeout(function() {
             console.log('Reconnecting to server');
 			  isReconnecting = true;
-              $.connection.hub.start();
-        }, 5000); // Restart connection after 5 seconds.
+              connectionFunction();
+        }, 2000); // Restart connection after 2 seconds.
     });
 	
+	//Connect to server
+	connectionFunction();
+	
 	echoInterval = setInterval(function() {	
-		var reconnectTimeout = setTimeout(		
+		reconnectTimeout = setTimeout(		
 			function() {
 				if(isReconnecting || !isConnected)
 				{
