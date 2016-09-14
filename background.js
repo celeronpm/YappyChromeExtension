@@ -1,4 +1,5 @@
 var apiHost = 'https://api.yappy.im';
+var wsHost = 'https://ws.yappy.im';
 var isConnected = false;
 var loginwindowopened = 0;
 var openLoginWindowTime = 1000 * 60 * 10;
@@ -110,7 +111,7 @@ var clickHandler = function(info, tab) {
 function connect() {
 
     var chatHub = $.connection.chatHub;
-    $.connection.hub.url = apiHost + "/signalr";
+    $.connection.hub.url = wsHost + "/signalr";
     var pendingNotifications = {};
 	var reconnectTimeout;
 	var echoInterval;

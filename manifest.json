@@ -4,7 +4,7 @@
   "name": "Yappy",
   "short_name": "Yappy",
   "description": "Send & Receive text messages from Chrome using your Android phone",
-  "version": "1.36",
+  "version": "1.39",
   "browser_action": {
     "default_icon": "icon.png",
     "default_popup": "popup.html"
@@ -20,11 +20,12 @@
 	"contextMenus", 
 	"tabs", 
 	"notifications",
+	"https://ws.yappy.im/*",
 	"https://api.yappy.im/*",
 	"https://www.yappy.im/*"
   ],
   "web_accessible_resources": [
 	"font/roboto/*.ttf"
   ],
-  "content_security_policy": "script-src 'self' https://api.yappy.im; object-src 'self'; img-src 'self' https://api.yappy.im;"
+  "content_security_policy": "script-src 'self' https://api.yappy.im https://ws.yappy.im; object-src 'self'; img-src 'self' https://api.yappy.im https://ws.yappy.im;"
 }
