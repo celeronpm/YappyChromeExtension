@@ -116,6 +116,7 @@ function connect() {
 	var reconnectTimeout;
 	var echoInterval;
 	var isReconnecting = true;
+	var lastPing = new Date();
 	
     chatHub.client.addChromeMessage = function(message) {
 
@@ -306,6 +307,7 @@ function connect() {
 	
 	chatHub.client.echo = function () {
         clearTimeout(reconnectTimeout);
+		lastPing = new Date();
     };
 					
     /* Create a notification and store references
@@ -402,8 +404,13 @@ function connect() {
 	
 	echoInterval = setInterval(function() {	
 		var reconnectTimeout = setTimeout(		
+		
+		//Give server 5 seconds to echo response
 			function() {
-				if(isReconnecting || !isConnected)
+				var millsSinceLastEcho = new Date() - lastPing;
+				
+				//If we haven't heard anything in 30 seconds, stop connection altogether and restart
+				if((isReconnecting || !isConnected) && millsSinceLastEcho < 30000)
 				{
 					return;
 				}		
